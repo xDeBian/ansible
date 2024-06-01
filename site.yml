@@ -1,0 +1,36 @@
+---
+- hosts: all
+  become: yes
+  roles:
+    - node_exporter
+    - nginx
+
+- hosts: prometheus
+  become: yes
+  roles:
+    - prometheus
+    - alertmanager
+
+- hosts: grafana
+  become: yes
+  roles:
+    - grafana
+
+- name: Configure Discord webhook
+  hosts: prometheus
+  become: yes
+  tasks:
+    - name: Copy Alertmanager configuration file
+      copy:
+        src: alertmanager.yml
+        dest: /etc/alertmanager/alertmanager.yml
+        owner: alertmanager
+        group: alertmanager
+        mode: '0644'
+      notify: restart alertmanager
+
+  handlers:
+    - name: Restart Alertmanager
+      systemd:
+        name: alertmanager
+        state: restarted

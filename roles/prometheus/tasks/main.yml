@@ -1,0 +1,101 @@
+---
+- name: Create Prometheus group
+  group:
+    name: prometheus
+    state: present
+
+- name: Create Prometheus user
+  user:
+    name: prometheus
+    group: prometheus
+    system: yes
+    shell: /bin/false
+    home: /var/lib/prometheus
+    createhome: no
+
+- name: Install required packages
+  apt:
+    name:
+      - wget
+      - tar
+    state: present
+    
+- name: Set timezone to Georgia
+  timezone:
+    name: Asia/Tbilisi
+
+- name: Install NTP
+  apt:
+    name: ntp
+    state: present
+
+- name: Configure NTP servers
+  lineinfile:
+    path: /etc/ntp.conf
+    line: "{{ item }}"
+    insertafter: EOF
+  loop:
+    - "server ge.pool.ntp.org"
+    - "server 0.ge.pool.ntp.org"
+    - "server 1.ge.pool.ntp.org"
+    - "server 2.ge.pool.ntp.org"
+
+- name: Restart NTP service
+  service:
+    name: ntp
+    state: restarted    
+
+- name: Remove existing Prometheus directory if it exists
+  file:
+    path: /opt/prometheus
+    state: absent
+
+- name: Download Prometheus
+  get_url:
+    url: "https://github.com/prometheus/prometheus/releases/download/v2.32.1/prometheus-2.32.1.linux-amd64.tar.gz"
+    dest: "/tmp/prometheus.tar.gz"
+
+- name: Extract Prometheus
+  unarchive:
+    src: "/tmp/prometheus.tar.gz"
+    dest: "/opt/"
+    remote_src: yes
+    extra_opts: [--strip-components=1]
+
+- name: Move Prometheus binaries
+  command: >
+    mv /opt/prometheus /opt/promtool /usr/local/bin/
+  args:
+    creates: /usr/local/bin/prometheus
+
+- name: Move Prometheus consoles and console_libraries
+  command: >
+    mv /opt/consoles /opt/console_libraries /etc/prometheus/
+  args:
+    creates: /etc/prometheus/consoles
+
+- name: Set ownership and permissions for Prometheus directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: prometheus
+    group: prometheus
+    mode: "0755"
+  with_items:
+    - /etc/prometheus
+    - /var/lib/prometheus
+
+- name: Copy Prometheus configuration file
+  template:
+    src: prometheus.yml.j2
+    dest: /etc/prometheus/prometheus.yml
+    owner: prometheus
+    group: prometheus
+    mode: "0644"
+  notify: restart prometheus
+
+- name: Configure Prometheus systemd service
+  template:
+    src: prometheus.service.j2
+    dest: /etc/systemd/system/prometheus.service
+  notify: restart prometheus
