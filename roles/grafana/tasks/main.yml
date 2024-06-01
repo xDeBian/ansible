@@ -110,8 +110,6 @@
       Content-Type: "application/json"
       Authorization: "Basic {{ 'admin:admin' | b64encode }}"
 
-
-
 - name: Check if DevOps Academy Organization already exists
   uri:
     url: "http://192.168.100.32:3000/api/orgs/name/DevOps%20Academy"
@@ -134,24 +132,33 @@
       Authorization: "Basic {{ 'admin:admin' | b64encode }}"
   when: organization_check.status != 200
 
-
-- name: install node exporter dashboard
+- name: Install node exporter dashboard
   get_url:
     url: https://raw.githubusercontent.com/rfrail3/grafana-dashboards/master/prometheus/node-exporter-full.json
     dest: /var/lib/grafana/node-exporter.json
     mode: '0755'
 
-- name: activate dashboard for node exporter
+- name: Activate dashboard for node exporter
   template:
     src: dashboard-node-exporter.yml.j2
     dest: /etc/grafana/provisioning/dashboards/dashboard-node-exporter.yml
     mode: 0755
-  
 
-- name: restart_grafana
+- name: Copy Prometheus Alerts dashboard JSON
+  copy:
+    src: new_dashboard.json
+    dest: /var/lib/grafana/new_dashboard.json
+    mode: '0755'
+
+- name: Activate dashboard for Prometheus Alerts
+  template:
+    src: dashboard-prometheus-alerts.yml.j2
+    dest: /etc/grafana/provisioning/dashboards/dashboard-prometheus-alerts.yml
+    mode: 0755
+
+- name: Restart Grafana service
   systemd:
     name: grafana-server
     state: restarted
     enabled: yes
     daemon_reload: yes
-    

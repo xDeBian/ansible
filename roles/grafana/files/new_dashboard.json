@@ -1,0 +1,92 @@
+{
+  "dashboard": {
+    "annotations": {
+      "list": []
+    },
+    "panels": [
+      {
+        "datasource": "Prometheus",
+        "fieldConfig": {
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "custom": {},
+            "mappings": [],
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "red",
+                  "value": 1
+                }
+              ]
+            }
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 9,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        },
+        "id": 2,
+        "options": {
+          "legend": {
+            "displayMode": "table",
+            "placement": "bottom"
+          },
+          "tooltip": {
+            "mode": "single"
+          }
+        },
+        "targets": [
+          {
+            "expr": "ALERTS{alertstate=\"firing\"}",
+            "interval": "",
+            "legendFormat": "{{ alertname }}",
+            "refId": "A"
+          }
+        ],
+        "title": "Alerts Over Time",
+        "type": "timeseries"
+      },
+      {
+        "datasource": "Prometheus",
+        "fieldConfig": {
+          "defaults": {
+            "custom": {}
+          },
+          "overrides": []
+        },
+        "gridPos": {
+          "h": 9,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        },
+        "id": 4,
+        "options": {
+          "showHeader": true
+        },
+        "targets": [
+          {
+            "expr": "ALERTS",
+            "refId": "A"
+          }
+        ],
+        "title": "Active Alerts",
+        "type": "table"
+      }
+    ],
+    "schemaVersion": 30,
+    "title": "Prometheus Alerts",
+    "version": 1
+  },
+  "overwrite": true
+}
