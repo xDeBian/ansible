@@ -13,5 +13,18 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9100']
 
+  - job_name: 'demo'
+    static_configs:
+      - targets:
+        - 'demo.promlabs.com:10000'
+        - 'demo.promlabs.com:10001'
+        - 'demo.promlabs.com:10002'      
+
 rule_files:
-  - /etc/prometheus/alert.rules.yml   
+  - /etc/prometheus/alert.rules.yml
+  - /etc/prometheus/demo-alerts.yml   
+
+alerting:
+  alertmanagers:
+    - static_configs:
+        - targets: ['localhost:9093']
